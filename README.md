@@ -6,7 +6,8 @@ Live app: https://bezialemma.com/WoodsHole/
 
 This repository is the source of truth for WoodsHole. The personal website imports
 the latest released static build into `WoodsHole/` and `docs/WoodsHole/`. Develop
-here and push to `main`; no merging app changes into the website is required.
+here and publish a static build when ready; no merging app source into the website
+is required. Builds and imports are manual, with no scheduled background jobs.
 
 ## Development
 
@@ -23,19 +24,27 @@ The optional forecast preparation tool is `python tools/fetch_necofs.py`; it wri
 
 ## Build and website delivery
 
-Google weather can optionally supplement the current 72-hour forecasts. It is
-disabled until a Google Cloud project, API key, and private server configuration
-are ready. See [Google weather setup](cloudflare/google-weather/README.md).
-
-Run `python tools/build.py` to generate `dist/woodshole-site.zip` using Python's
+Commit your changes, then run `python tools/build.py` to generate
+`dist/woodshole-site.zip` from the committed source using Python's
 standard library. Only runtime assets are packaged, with checksums and the source
-commit in `build.json`. Every push to `main` validates syntax and publishes a
-versioned GitHub release. Pull requests produce a build artifact without a release.
+commit in `build.json`. To publish, upload `dist/woodshole-site.zip` to a GitHub
+release, or explicitly run the **Build WoodsHole** workflow on `main`. The workflow
+has only a manual trigger; pushes and pull requests do not start it.
 
-The website's **Sync WoodsHole build** workflow checks every 30 minutes (GitHub may
-delay scheduled runs), or can be run manually for immediate import. It validates
-the release, updates both website copies, and requests a GitHub Pages rebuild.
+The website's **Sync WoodsHole build** workflow also runs only when manually
+started. It validates the release, updates both website copies, and requests a
+GitHub Pages rebuild. Alternatively, download the release and run the website's
+`tools/sync_woodshole.py` locally before publishing the website.
 App routes and relative assets work at `/WoodsHole/` or at a standalone server root.
+
+## Runtime and cost
+
+WoodsHole is a static app. Weather requests and refresh timers run in the visitor's
+browser while the page is open; nothing polls for weather when nobody has it open.
+It uses the existing public endpoints and requires no paid Google Weather account,
+Cloudflare Worker, or automated GitHub weather job. Optional `data/necofs.json` is
+a manually prepared forecast snapshot, not an automatically refreshed feed. The
+local AIS development relay runs only when explicitly started.
 
 Imported from `bezlemma/website` at commit
 `0ecda77b72d2b1bff975bdb9080d0fe431ca8a9a`. This repository starts with a clean source

@@ -1,8 +1,5 @@
 name: Build WoodsHole
 on:
-  push:
-    branches: [main]
-  pull_request:
   workflow_dispatch:
 permissions:
   contents: write
@@ -24,8 +21,6 @@ jobs:
         run: |
           node --check app.js
           node --check sw.js
-          node --check vendor/google-weather.js
-          node --test test/google-weather.test.mjs
           python -m py_compile dev_server.py tools/fetch_necofs.py tools/build.py
       - name: Build static site
         run: python tools/build.py
@@ -44,5 +39,5 @@ jobs:
           else
             gh release create "$tag" dist/woodshole-site.zip \
               --target "$GITHUB_SHA" --title "WoodsHole ${GITHUB_SHA:0:7}" \
-              --notes "Static website build. Imported automatically by bezlemma/website." --latest
+              --notes "Static website build. Import into bezlemma/website when publishing an app update." --latest
           fi

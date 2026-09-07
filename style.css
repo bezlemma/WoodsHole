@@ -814,6 +814,3 @@ body.planning #btn-cams { display: none; }
 
 #timeline .axis { stroke: rgba(14,42,67,.55); stroke-width: 1.4; }
 #timeline .lgnum.inv { fill: #fff; }
-
-#google-weather-attribution { display: block; margin-top: 3px; color: #1f1f1f; font: 12px/1.4 Arial, sans-serif; }
-#google-weather-attribution[hidden] { display: none; }

@@ -4,10 +4,9 @@
      - NOAA CO-OPS (tides, water/air temp, current predictions,
                     New Bedford & Woods Hole gauges for bay–sound setup)
      - Open-Meteo   (wind + temperature forecast grid, sun times)
-     - Google Weather API (optional wind, temperature and rain via a secret-backed Worker)
      - NWS          (marine alerts) · Weather Underground (WHYC live wind)
-     - NECOFS       (optional data/necofs.json, refreshed nightly by a
-                     GitHub Action — model surface currents for the sounds)
+     - NECOFS       (optional data/necofs.json, manually prepared model
+                     surface currents for the sounds)
    The water itself is rendered as a WebGL texture whose motion and
    color show the current; wind is a particle layer with its own ramp.
    ============================================================ */
@@ -562,52 +561,6 @@ function stationV(st, t) {             // signed kn at a station, incl. weather 
 function stationLiveV(st, t) {         // the NOAA series, for cross-check display
   return st.fn ? st.fn(t) : null;
 }
-
-// The endpoint contains no key; the Worker keeps credentials and forecasts off GitHub.
-const GOOGLE_WEATHER_ENDPOINT = document.querySelector('meta[name="google-weather-endpoint"]')?.content.trim() || '';
-let googleWeatherBase = null, googleWeatherExpiry = 0, googleWeatherTimer = null;
-function refreshForecastDisplay() {
-  recalcWindCons();
-  buildTimeline();
-  fillLegend();
-  if (waterGL) { waterGL.flowDirty(); waterGL._reset(); }
-  if (windArrows) windArrows.notifyTime();
-  requestReadout();
-}
-function clearGoogleWeather(redraw = false) {
-  clearTimeout(googleWeatherTimer);
-  if (!googleWeatherBase) return;
-  S.wind = googleWeatherBase.wind;
-  S.centerWx = googleWeatherBase.wx;
-  googleWeatherBase = null;
-  googleWeatherExpiry = 0;
-  const attribution = $('google-weather-attribution');
-  if (attribution) attribution.hidden = true;
-  if (redraw) refreshForecastDisplay();
-}
-async function loadWeatherSources() {
-  clearGoogleWeather();
-  const google = async () => {
-    if (!GOOGLE_WEATHER_ENDPOINT) return null;
-    // Deliberately bypass fetchJSON, localStorage, and offline service-worker caches.
-    const response = await fetch(GOOGLE_WEATHER_ENDPOINT, { cache: 'no-store', signal: AbortSignal.timeout(12000) });
-    if (!response.ok) throw new Error('Google forecast unavailable');
-    return response.json();
-  };
-  const results = await Promise.allSettled([loadWind(), loadCenterWx(), google()]);
-  const data = results[2].status === 'fulfilled' ? results[2].value : null;
-  const merged = WoodsHoleGoogle.merge(S.wind, S.centerWx, data, GRID_LATS, GRID_LNGS);
-  if (!merged) return; // Open-Meteo remains available when Google fails or is incomplete.
-  googleWeatherBase = { wind: S.wind, wx: S.centerWx };
-  S.wind = merged.wind;
-  S.centerWx = merged.wx;
-  googleWeatherExpiry = merged.expiresAt;
-  $('google-weather-attribution').hidden = false;
-  googleWeatherTimer = setTimeout(() => clearGoogleWeather(true), Math.max(0, googleWeatherExpiry - Date.now()));
-}
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && googleWeatherBase && Date.now() >= googleWeatherExpiry) clearGoogleWeather(true);
-});
 
 async function loadWind() {
   const lats = [], lngs = [];
@@ -6003,7 +5956,6 @@ function positionScrub() {
 /* ------------------------------ readouts ------------------------------ */
 
 function updateReadout() {
-  if (googleWeatherBase && Date.now() >= googleWeatherExpiry) clearGoogleWeather(true);
   const t = S.tScrub;
   const nowMs = Date.now();
   try { updateWaveLegend(); } catch (e) {}   // seas scale follows the scrub
@@ -6064,7 +6016,6 @@ function updateReadout() {
   const sw2 = $('srcwarn');
   if (sw2) {
     const warns = [];
-    if (GOOGLE_WEATHER_ENDPOINT && !googleWeatherBase) warns.push('Google weather unavailable · Open-Meteo forecast');
     if (S.curSource === 'salvaged') warns.push("NOAA currents down · yesterday's tables");
     else if (S.curSource === 'none') {
       warns.push(flowField && flowField.tideOnly
@@ -7723,7 +7674,7 @@ async function boot() {
       })
     : Promise.all([loadFlowData(), loadSwe(), loadWindG()]));
   const bootLoads = [
-    loadTide(), loadWeatherSources(), loadCurrentHarmonics().then(() => loadCurrents()), loadObs(), loadAlerts(),
+    loadTide(), loadWind(), loadCenterWx(), loadCurrentHarmonics().then(() => loadCurrents()), loadObs(), loadAlerts(),
     loadResiduals(), loadNecofs(), loadFerryRoutes(), geoFlowLoad, loadWindObs(), loadSeasObs(), loadHaight(),
     loadTideAtlas(),
   ];
@@ -7847,7 +7798,7 @@ async function boot() {
     if (S.live) requestReadout();
   }, 6 * 60e3);
   setInterval(async () => {
-    await Promise.allSettled([loadWeatherSources(), loadResiduals(), loadNecofs()]);
+    await Promise.allSettled([loadWind(), loadCenterWx(), loadResiduals(), loadNecofs()]);
     // NOAA's currents service goes down now and then (2026-07-17 it did):
     // when it recovers — or when single stations failed at boot — pick the
     // stations back up without needing a reload

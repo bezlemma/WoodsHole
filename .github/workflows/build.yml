@@ -24,6 +24,8 @@ jobs:
         run: |
           node --check app.js
           node --check sw.js
+          node --check vendor/google-weather.js
+          node --test test/google-weather.test.mjs
           python -m py_compile dev_server.py tools/fetch_necofs.py tools/build.py
       - name: Build static site
         run: python tools/build.py

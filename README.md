@@ -23,6 +23,10 @@ The optional forecast preparation tool is `python tools/fetch_necofs.py`; it wri
 
 ## Build and website delivery
 
+Google weather can optionally supplement the current 72-hour forecasts. It is
+disabled until a Google Cloud project, API key, and private server configuration
+are ready. See [Google weather setup](cloudflare/google-weather/README.md).
+
 Run `python tools/build.py` to generate `dist/woodshole-site.zip` using Python's
 standard library. Only runtime assets are packaged, with checksums and the source
 commit in `build.json`. Every push to `main` validates syntax and publishes a

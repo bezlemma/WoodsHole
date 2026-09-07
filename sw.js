@@ -4,14 +4,15 @@
    live (NOAA, Open-Meteo, data JSONs with time-bucketed URLs) is
    network-first with cache fallback, so the page still opens on the water
    with the last-seen conditions when signal drops. */
-const V = 'wh-v207';
+const V = 'wh-v208';
 const PRECACHE = [
   './',
   'index.html',
   'about.html',
-  'style.css?v=106',
-  'app.js?v=195',
+  'style.css?v=107',
+  'app.js?v=196',
   'vendor/leaflet.js',
+  'vendor/google-weather.js?v=1',
   'vendor/leaflet.css',
   'manifest.webmanifest',
   'icon-192.png',
@@ -79,6 +80,11 @@ function url_endswith(u, tail) {
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
+  const requestUrl = new URL(req.url);
+  if (requestUrl.pathname.endsWith('/api/google-weather') || requestUrl.hostname === 'weather.googleapis.com') {
+    e.respondWith(fetch(req, { cache: 'no-store' }));
+    return;
+  }
   // the app's explicit cache-bypass retries (fetch(..., {cache:'reload'}))
   // must reach the network AND refresh our copy, not loop back into it
   if (req.cache === 'reload' || req.cache === 'no-cache' || req.cache === 'no-store') {

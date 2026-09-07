@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Woods Hole - Wind&Current</title>
 <meta name="description" content="Live wind, tide, and current conditions for Woods Hole, Massachusetts — with a 72-hour scrubbable forecast, nautical chart layer, and harbor webcams.">
+<meta name="google-weather-endpoint" content="">
 <meta name="theme-color" content="#0e2a43">
 <meta property="og:title" content="Woods Hole — wind · tide · current">
 <meta property="og:description" content="Live conditions and a 72-hour forecast for Woods Hole passage, Great Harbor, and Vineyard Sound.">
@@ -14,7 +15,7 @@
 <link rel="preconnect" href="https://api.tidesandcurrents.noaa.gov" crossorigin>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230e2a43'/%3E%3Ctext x='50' y='72' font-size='60' text-anchor='middle'%3E%E2%9A%93%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="vendor/leaflet.css">
-<link rel="stylesheet" href="style.css?v=106">
+<link rel="stylesheet" href="style.css?v=107">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 </head>
@@ -110,7 +111,7 @@
       </div>
       <svg id="timeline" preserveAspectRatio="none" aria-label="72 hour forecast timeline — drag to scrub"></svg>
       <input id="scrub-range" type="range" min="0" max="1000" value="0" step="1" aria-label="Forecast time scrubber">
-      <div id="credits"><b id="nonav">not for navigation</b></div>
+      <div id="credits"><b id="nonav">not for navigation</b><span id="google-weather-attribution" hidden>Forecast wind, temperature &amp; rain: Includes data from Google Maps · Source: Includes weather data from Google</span></div>
     </div>
 
   </section>
@@ -182,6 +183,7 @@
 <button id="btn-map" aria-label="Scroll back up to the map">▲ map</button>
 
 <script src="vendor/leaflet.js"></script>
-<script src="app.js?v=195"></script>
+<script src="vendor/google-weather.js?v=1"></script>
+<script src="app.js?v=196"></script>
 </body>
 </html>

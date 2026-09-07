@@ -1,0 +1,816 @@
+/* ============================================================
+   Woods Hole · wind, tide & current — bezialemma.com/WoodsHole
+   ============================================================ */
+
+:root {
+  --navy:   #0e2a43;
+  --navy-2: #16395a;
+  --ink:    #16293b;
+  --ink-2:  #4a6076;
+  --paper:  #f6f3ec;
+  --card:   rgba(255,255,255,.88);
+  --accent: #f4a261;            /* warm sunset orange */
+  --accent-2:#d77b3d;
+  --sea:    #007fff;
+  --sea-soft:#80bfff;
+  --land:   #a7c957;
+  --land-deep:#6f8f32;
+  --ocean:  #007fff;
+  --good:   #2e7d32;
+  --headerh: 52px;
+  --radius: 16px;
+  --shadow: 0 4px 18px rgba(14,42,67,.18);
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  line-height: 1.45;
+}
+a { color: var(--accent-2); }
+
+/* ---------------- header ---------------- */
+#topbar {
+  height: var(--headerh);
+  background: var(--navy);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  padding-top: env(safe-area-inset-top);
+  position: relative;
+  z-index: 1200;
+}
+
+/* ---------------- alert bar ---------------- */
+#alertbar {
+  background: #8a2f12;
+  color: #ffe9db;
+  font-size: 13px;
+  padding: 7px 14px;
+  padding-top: calc(7px + env(safe-area-inset-top));
+  position: relative;
+  z-index: 1150;
+}
+#alertbar a { color: #ffcda8; }
+
+/* ---------------- hero / map ---------------- */
+#hero {
+  position: relative;
+  height: calc(100vh - var(--alerth, 0px));
+  height: calc(100dvh - var(--alerth, 0px));
+  min-height: 430px;
+  overflow: hidden;
+  background: var(--land);
+}
+/* Flat color is intentional: vector motion carries the map's texture. */
+#map {
+  position: absolute; inset: 0; z-index: 1;
+  background-color: var(--land);
+}
+
+/* flow (wind + water) canvas panes */
+.flow-canvas { pointer-events: none; }
+.chart-tint-canvas { pointer-events: none; }
+
+/* ---------------- legend colorbars ---------------- */
+#legend {
+  position: absolute;
+  left: calc(8px + env(safe-area-inset-left, 0px));
+  top: 64px;
+  z-index: 890;
+  display: flex;
+  gap: 9px;
+  padding: 8px 7px;
+  background: rgba(255,255,255,.42);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  border: 1px solid rgba(14,42,67,.08);
+  box-shadow: var(--shadow);
+  /* the scales are toggles now — they must receive taps */
+  pointer-events: auto;
+}
+.lg { display: flex; flex-direction: column; align-items: center; }
+#lg-tog-waves { display: none; }
+/* the wind bar's in-frame max tick: a black line with its number, shown
+   when the day's max sits under the 15 kn length floor */
+#lg-wind { position: relative; }
+#lg-wind-tick { position: absolute; left: -2px; right: -2px; height: 2px;
+  background: #000; pointer-events: none; }
+#lg-wind-tick::after { content: attr(data-kn); position: absolute; left: 100%;
+  margin-left: 3px; top: -4px; font: 700 8px system-ui, sans-serif; color: #14202c; }
+.lg-bar {
+  width: 10px;
+  height: 96px;
+  border-radius: 6px;
+  border: 1px solid rgba(14,42,67,.18);
+}
+#lg-cur { display: block; }
+.lg-top, .lg-bot {
+  font-size: 8.5px;
+  color: var(--ink-2);
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+}
+.lg small {
+  margin-top: 4px;
+  font-size: 8px;
+  line-height: 1.15;
+  text-align: center;
+  color: var(--ink-2);
+  letter-spacing: .03em;
+  text-transform: uppercase;
+}
+
+/* ---------------- floating chips ---------------- */
+#chips {
+  position: absolute;
+  top: 10px;
+  left: calc(10px + env(safe-area-inset-left, 0px));
+  right: calc(10px + env(safe-area-inset-right, 0px));
+  z-index: 900;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  pointer-events: none;           /* let map receive touches between chips */
+}
+#chips::-webkit-scrollbar { display: none; }
+.chip {
+  pointer-events: auto;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--card);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border-radius: 999px;
+  padding: 6px 12px 6px 9px;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(14,42,67,.08);
+}
+.chip-ico {
+  width: 21px; height: 21px;
+  flex: 0 0 auto;
+  color: var(--sea);
+  font-size: 15px;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .3s ease;
+}
+#wind-arrow { color: var(--accent-2); }
+#cur-arrow  { color: var(--sea); }
+.chip-body { display: flex; flex-direction: column; line-height: 1.05; }
+.chip-body b { font-size: 13.5px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.chip-body small { font-size: 9.5px; color: var(--ink-2); letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; }
+
+/* ---------------- side controls ---------------- */
+#sidectl {
+  position: absolute;
+  right: calc(10px + env(safe-area-inset-right, 0px));
+  bottom: calc(216px + env(safe-area-inset-bottom));
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+.ctl {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 0;
+  background: rgba(255,255,255,.52);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: var(--ink);
+  border: 1px solid rgba(14,42,67,.1);
+  border-radius: 13px;
+  width: 48px; height: 48px;
+  font-size: 19px;
+  line-height: 1;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  justify-content: center;
+  pointer-events: auto;
+}
+.ctl span { font-size: 8.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); margin-top: 2px; }
+.ctl[aria-pressed="true"] { background: var(--navy); color: #fff; }
+.ctl[aria-pressed="true"] span { color: var(--sea-soft); }
+
+/* ---------------- bottom scrub panel ---------------- */
+#panel {
+  position: absolute;
+  left: 8px; right: 8px;
+  bottom: calc(8px + env(safe-area-inset-bottom));
+  z-index: 1000;
+  background: var(--card);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-radius: var(--radius);
+  box-shadow: 0 6px 24px rgba(14,42,67,.28);
+  border: 1px solid rgba(14,42,67,.08);
+  padding: 8px 10px 5px;
+}
+#readout {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 2px 6px;
+}
+.live-btn {
+  display: flex; align-items: center; gap: 6px;
+  border: 1px solid rgba(14,42,67,.15);
+  background: #fff;
+  color: var(--ink-2);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  border-radius: 999px;
+  padding: 5px 11px;
+  cursor: pointer;
+}
+.live-btn .dot { width: 8px; height: 8px; border-radius: 50%; background: #b3b9c2; }
+.live-btn.is-live { display: none; }   /* live is the default — no badge; the pill appears only as the way BACK */
+.live-btn.is-live .dot { background: var(--good); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+#scrubtime {
+  flex: 1;
+  text-align: center;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#scrubtime .plus { color: var(--accent-2); font-weight: 700; }
+#btn-play {
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(232,106,36,.45);
+  flex: 0 0 auto;
+}
+#btn-play:active { transform: scale(.94); }
+
+#timeline {
+  display: block;
+  width: 100%;
+  height: 118px;
+  touch-action: none;
+  cursor: crosshair;
+  border-radius: 8px;
+  overflow: visible;
+}
+#scrub-range {
+  position: absolute;
+  width: 1px; height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+#credits { text-align: center; padding: 3px 0 1px; font-size: 11px; }
+#credits #nonav { color: #c0392b; font-weight: 700; letter-spacing: .04em; }
+
+/* timeline SVG internals */
+#timeline .night     { fill: rgba(14,42,67,.07); }
+#timeline .tide-area { fill: rgba(79,131,168,.20); stroke: none; }
+#timeline .tide-line { fill: none; stroke: var(--sea); stroke-width: 1.8; }
+/* schedule ghosts vs live boats when the clock is scrubbed */
+.ais-ship.ghost .glyph { animation: none; opacity: .8; }
+.ais-ship.timefade { opacity: .18; }
+/* mean high/low reference: is this high above or below normal */
+#timeline .avgtide { stroke: #a8623a; stroke-width: 1; stroke-dasharray: 4 3; opacity: .75; }
+#timeline .avgtide-lb { font: 800 8.5px system-ui, sans-serif; fill: #a8623a; }
+#timeline .past      { fill: rgba(246,243,236,.55); }
+#timeline .nowline   { stroke: rgba(14,42,67,.55); stroke-width: 1; stroke-dasharray: 3 3; }
+#timeline .scrubbox {
+  fill: rgba(178,63,49,.08);
+  stroke: rgba(178,63,49,.88);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+#timeline .wgrid     { stroke: rgba(14,42,67,.12); stroke-width: 1; stroke-dasharray: 3 3; }
+#timeline .ytick     { font-size: 12.5px; font-weight: 700; fill: var(--ink);
+                       font-variant-numeric: tabular-nums; }
+#timeline .ccol line { stroke: #16202c; stroke-width: 1.7; }
+#timeline .ccol path { fill: #16202c; }
+/* ---- two-panel forecast bar ---- */
+#timeline .panelbox { fill: none; stroke: rgba(22,32,44,.30); stroke-width: 1.1; }
+#timeline .brk { stroke: rgba(22,32,44,.55); stroke-width: 1.4; }
+#timeline .xtick { stroke: rgba(22,32,44,.55); stroke-width: 1.1; }
+#timeline .xtick.minor { stroke: rgba(22,32,44,.28); }
+#timeline .xtick.day { stroke: rgba(22,32,44,.20); }
+#timeline .xlbl { font: 700 11px system-ui, sans-serif; fill: var(--ink);
+  font-variant-numeric: tabular-nums; }
+#timeline .xlbl.day { font-weight: 800; }
+#timeline .cell { stroke: rgba(255,255,255,.65); stroke-width: .8; }
+#timeline .cellnum { font: 800 11px system-ui, sans-serif; fill: #10222f;
+  font-variant-numeric: tabular-nums; paint-order: stroke;
+  stroke: rgba(255,255,255,.88); stroke-width: 2px; stroke-linejoin: round; }
+#timeline .cellnum.inv { fill: #fff; }
+#timeline .rowname { font: 700 10.5px system-ui, sans-serif; fill: var(--ink); }
+#timeline .phdr { font: 800 10.5px system-ui, sans-serif; fill: var(--ink); letter-spacing: .04em; }
+#timeline .xlbl.minor { font-weight: 600; }
+#timeline .xlbl.now { fill: #b23f31; font-weight: 800; }
+#timeline .nightlbl { font: 400 9px system-ui, sans-serif; fill: rgba(90,110,135,.6); }
+/* passage-windows card (tap the current chip) */
+#chip-cur { cursor: pointer; }
+#transitcard { position: absolute; z-index: 1150; top: 64px; left: 12px;
+  background: rgba(255,255,255,.96); border-radius: 12px; padding: 10px 12px 8px;
+  box-shadow: 0 6px 22px rgba(10,25,45,.25); max-width: 340px;
+  font: 12.5px/1.5 system-ui, sans-serif; }
+#transitcard > b { font-size: 13px; }
+.tr-row { display: flex; gap: 8px; align-items: baseline; padding: 3px 0;
+  border-bottom: 1px solid rgba(14,42,67,.08); white-space: nowrap; }
+.tr-row:last-child { border-bottom: none; }
+.tr-row em { font-style: normal; font-weight: 800; width: 86px; color: #2b567f; }
+.tr-row.on em { color: #b23f31; }
+.tr-row span { color: var(--ink-2); }
+.tr-row b { margin-left: auto; font-variant-numeric: tabular-nums; }
+.tr-row.on { background: rgba(232,106,36,.07); border-radius: 6px; }
+#transitcard .pc-hint { margin-top: 6px; color: var(--ink-2); font-size: 10px; white-space: normal; }
+#timeline .stormband { fill: rgba(178,63,49,.12); }
+#timeline .lgnum { font: 700 9.5px system-ui, sans-serif; fill: var(--ink);
+  font-variant-numeric: tabular-nums; }
+#timeline .hl { font-size: 11px; font-weight: 800; fill: #35618b; paint-order: stroke; stroke: rgba(255,255,255,.9); stroke-width: 2.5px; }
+
+
+#btn-map {
+  position: fixed;
+  right: 14px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: 1300;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  border-radius: 999px;
+  padding: 10px 18px;
+  box-shadow: 0 4px 14px rgba(232,106,36,.5);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+  transition: opacity .25s ease, transform .25s ease;
+}
+#btn-map.show { opacity: 1; pointer-events: auto; transform: none; }
+
+/* ---------------- leaflet skin ---------------- */
+.leaflet-container { font: inherit; }
+.leaflet-control-attribution { display: none; }   /* replaced by #credits */
+.leaflet-popup-content-wrapper {
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  color: var(--ink);
+}
+.leaflet-popup-content { margin: 10px 14px; font-size: 12.5px; line-height: 1.4; }
+.leaflet-popup-content b.pname { font-size: 13px; }
+.leaflet-popup-content table { border-collapse: collapse; margin-top: 4px; }
+.leaflet-popup-content td { padding: 1px 8px 1px 0; font-variant-numeric: tabular-nums; }
+.leaflet-popup-content .ev-flood { color: var(--accent-2); font-weight: 600; }
+.leaflet-popup-content .ev-ebb   { color: var(--sea); font-weight: 600; }
+
+/* current stations — quiet dots; the flow field itself shows the current */
+.sta-dot-wrap { pointer-events: auto; }
+.sta-dot {
+  width: 9px; height: 9px;
+  margin: 7.5px;
+  border-radius: 50%;
+  background: rgba(14,42,67,.40);
+  border: 1.5px solid rgba(255,255,255,.85);
+  box-shadow: 0 1px 3px rgba(14,42,67,.3);
+}
+
+/* wind observation stations — same family as the current-station dots,
+   in the wind ramp's warm color so they read at a glance */
+.wind-marker { pointer-events: auto; }
+.wind-marker .vane {
+  width: 9px; height: 9px;
+  margin: 7.5px;
+  border-radius: 50%;
+  background: rgba(176,78,46,.78);
+  border: 1.5px solid rgba(255,255,255,.92);
+  box-shadow: 0 1px 3px rgba(120,50,30,.4);
+}
+
+/* tide station marker */
+.tide-marker .ring {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: rgba(79,131,168,.25);
+  border: 2px solid var(--sea);
+  box-shadow: 0 0 0 0 rgba(79,131,168,.5);
+  animation: ring 3s infinite;
+}
+@keyframes ring {
+  0%   { box-shadow: 0 0 0 0 rgba(79,131,168,.45); }
+  70%  { box-shadow: 0 0 0 12px rgba(79,131,168,0); }
+  100% { box-shadow: 0 0 0 0 rgba(79,131,168,0); }
+}
+
+/* ---------------- cams ---------------- */
+#cams {
+  padding: 26px 16px 44px;
+  max-width: 1040px;
+  margin: 0 auto;
+  content-visibility: auto;
+  contain-intrinsic-size: 1000px;
+}
+#cams h2 {
+  font-family: Georgia, "Iowan Old Style", serif;
+  font-weight: 600;
+  color: var(--navy);
+  font-size: 21px;
+  margin: 0 0 14px;
+}
+.cam-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+.cam { margin: 0; }
+.cam-frame {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 9;
+  border-radius: 14px;
+  overflow: hidden;
+  background: linear-gradient(140deg, #16395a, #0e2a43 55%, #123049);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+}
+.cam-frame img, .cam-frame iframe {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  border: 0;
+}
+.cam-play {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%,-50%);
+  width: 58px; height: 58px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(232,106,36,.95);
+  color: #fff;
+  font-size: 20px;
+  padding-left: 4px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,0,0,.4);
+  transition: transform .15s ease;
+}
+.cam-play:hover { transform: translate(-50%,-50%) scale(1.07); }
+.poster-eelpond::after {
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(120% 90% at 20% 10%, rgba(156,192,214,.25), transparent 60%),
+    radial-gradient(100% 80% at 85% 90%, rgba(232,106,36,.18), transparent 55%);
+}
+.cam-ext {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%,-50%);
+  color: #fff;
+  font-size: 15px;
+  letter-spacing: .03em;
+  text-decoration: none;
+}
+.cam figcaption {
+  font-size: 12.5px;
+  color: var(--ink-2);
+  padding: 7px 4px 0;
+}
+.cam figcaption a { color: var(--accent-2); text-decoration: none; }
+.home-link { margin-top: 22px; font-size: 12px; }
+.home-link a { text-decoration: none; color: var(--ink-2); }
+
+/* ---------------- larger screens ---------------- */
+@media (min-width: 700px) {
+  .cam-grid { grid-template-columns: 1fr 1fr; }
+  #panel { left: 50%; right: auto; transform: translateX(-50%); width: min(860px, calc(100% - 24px)); }
+  body.planning #chips { right: 280px; }
+}
+@media (min-width: 1100px) {
+  .cam-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* phones: the map is the app — no banner, no chips, compact everything */
+@media (max-width: 699px) {
+  #topbar { display: none; }
+  #hero { height: calc(100vh - var(--alerth, 0px)); height: calc(100dvh - var(--alerth, 0px)); }
+  #chips { display: none; }
+  #legend { top: calc(8px + env(safe-area-inset-top)); padding: 5px 5px 4px; gap: 5px; }
+  .lg-bar { height: 56px; width: 9px; }
+  #lg-cur { width: 17px; height: 56px; }
+  .lg-top, .lg-bot { font-size: 7.5px; }
+  .lg small { font-size: 6.5px; margin-top: 2px; }
+  #plancard { top: calc(8px + env(safe-area-inset-top)); }
+  #sidectl { bottom: calc(210px + env(safe-area-inset-bottom)); gap: 6px; }
+  .ctl { width: 44px; height: 44px; border-radius: 12px; }
+  #panel { left: 6px; right: 6px; bottom: calc(6px + env(safe-area-inset-bottom)); padding: 5px 8px 4px; }
+  #transitcard { top: auto; bottom: calc(222px + env(safe-area-inset-bottom)); left: 10px; right: 64px; max-width: none; }
+  #readout { padding: 0 2px 4px; gap: 8px; }
+  #btn-play { width: 30px; height: 30px; font-size: 12px; }
+  #timeline { height: 128px; }
+}
+
+@media (max-width: 460px) {
+  #legend { padding: 5px 4px 4px; gap: 4px; }
+}
+
+/* Short landscape phones cannot fit a vertical stack above the forecast
+   card. Put the controls in one top row, clear of the legend, instead. */
+@media (max-width: 699px) and (max-height: 620px) {
+  #sidectl {
+    top: calc(8px + env(safe-area-inset-top));
+    left: 112px;
+    right: calc(8px + env(safe-area-inset-right));
+    bottom: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .ctl { width: 42px; height: 42px; }
+}
+
+/* A phone turned sideways is wider than the ordinary phone breakpoint but
+   still short. Treat it as an app surface, not as a tiny desktop. */
+@media (min-width: 700px) and (max-width: 950px) and (max-height: 620px) {
+  #chips { display: none; }
+  #legend { top: calc(8px + env(safe-area-inset-top)); padding: 5px; gap: 5px; }
+  .lg-bar { height: 56px; width: 9px; }
+  #lg-cur { width: 17px; height: 56px; }
+  .lg-top, .lg-bot { font-size: 7.5px; }
+  .lg small { font-size: 6.5px; margin-top: 2px; }
+  #sidectl {
+    top: calc(8px + env(safe-area-inset-top));
+    left: 112px;
+    right: calc(8px + env(safe-area-inset-right));
+    bottom: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+  .ctl { width: 42px; height: 42px; }
+  #panel {
+    left: 6px; right: 6px; width: auto;
+    transform: none;
+    bottom: calc(6px + env(safe-area-inset-bottom));
+    padding: 5px 8px 4px;
+  }
+  #readout { padding: 0 2px 4px; gap: 8px; }
+  #btn-play { width: 30px; height: 30px; font-size: 12px; }
+  #transitcard { top: auto; bottom: calc(206px + env(safe-area-inset-bottom)); left: 10px; right: 10px; max-width: none; }
+  .leaflet-control-scale { margin-bottom: calc(194px + env(safe-area-inset-bottom)) !important; }
+}
+
+@media (max-height: 620px) {
+  #hero { min-height: 0; }
+}
+
+/* reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .live-btn.is-live .dot, .tide-marker .ring, .ais-ship .glyph { animation: none; }
+}
+
+/* ---- about link in the side stack ---- */
+a.ctl { text-decoration: none; color: inherit; }
+
+/* ---- moon phase chip in the scrub readout ---- */
+#moon { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 6px; -webkit-user-select: none; user-select: none; }
+#moon small { font-size: 8px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); line-height: 1.2; }
+
+/* ---- tap-anywhere local forecast popup ---- */
+.spot-pop .leaflet-popup-content-wrapper { border-radius: 10px; box-shadow: 0 6px 22px rgba(10, 25, 45, .22); }
+.spot-pop .leaflet-popup-content { margin: 10px 12px 8px; }
+.spot { font: 12px/1.4 system-ui, -apple-system, sans-serif; color: #16202c; }
+.spot b { font-size: 14.5px; }
+.spot .sub { color: #5c6b7d; font-size: 11px; margin-top: 1px; }
+.spot canvas { display: block; margin-top: 7px; border-radius: 7px; background: #f3f7fb; }
+
+/* ---- layer toggles: the legend scales ARE the switches ---- */
+.lg { cursor: pointer; border-radius: 8px; padding: 2px 3px; transition: opacity .15s; }
+.lg:hover { background: rgba(20, 40, 70, .06); }
+.lg.off { opacity: .32; filter: grayscale(1); }
+/* gray -> white, OFF the current family's blues: whitecaps are what the
+   map actually draws, and cool pigment must price only current */
+.lg-wavebar { background: linear-gradient(to top, #93a4ac 0%, #c3ced4 55%, #ffffff 100%);
+  border: 1px solid rgba(20, 40, 70, .15); }
+
+/* ---- ferry terminals ---- */
+.ferry-ico { font-size: 17px; line-height: 22px; text-align: center;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .35)); cursor: pointer; }
+.spot.ferry ul { margin: 6px 0 8px; padding-left: 18px; font-size: 12.5px; }
+
+/* ---- spot popup: direction-first headers + arrow rows ---- */
+.spot .hdr { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: #5c6b7d; }
+.spot .hdr b { font-size: 14.5px; color: #16202c; }
+.spot .hdr b.rw { color: #c04a3c; }
+.spot .sa { font-style: normal; display: inline-block; width: 16px; text-align: center;
+  color: #16202c; font-size: 13px; }
+.spot .sa.rw { color: #c04a3c; }
+
+/* ---- desktop zoom slider ---- */
+#zoomwrap { position: absolute; right: 10px; top: auto; bottom: calc(502px + env(safe-area-inset-bottom)); width: 34px; height: 128px; z-index: 890;
+  background: rgba(255,255,255,.72); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  border-radius: 12px; border: 1px solid rgba(14,42,67,.08); box-shadow: var(--shadow);
+  display: flex; align-items: center; justify-content: center; }
+#zoomslider { -webkit-appearance: none; appearance: none; width: 108px; height: 4px;
+  background: #c3d2df; border-radius: 2px; transform: rotate(-90deg); outline: none; margin: 0; }
+#zoomslider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px;
+  border-radius: 50%; background: var(--navy); cursor: grab; border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(10,25,45,.4); }
+#zoomslider::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--navy);
+  cursor: grab; border: 2px solid #fff; }
+/* Keep zoom available on touch and short screens. Phones get a dedicated
+   left rail below the legend; short landscape layouts use a compact
+   horizontal slider in the same clear slot. */
+@media (max-width: 699px) {
+  #zoomwrap {
+    display: flex; left: calc(8px + env(safe-area-inset-left, 0px)); right: auto;
+    top: calc(158px + env(safe-area-inset-top)); bottom: auto;
+    width: 34px; height: 120px;
+  }
+  #zoomslider { width: 100px; }
+}
+@media (max-width: 699px) and (max-height: 620px),
+       (min-width: 700px) and (max-height: 720px) {
+  #zoomwrap {
+    display: flex; left: calc(8px + env(safe-area-inset-left, 0px)); right: auto;
+    top: calc(122px + env(safe-area-inset-top)); bottom: auto;
+    width: 96px; height: 30px;
+  }
+  #zoomslider { width: 76px; transform: none; }
+}
+
+/* ---- glowing ferry routes ---- */
+.ferry-route { filter: drop-shadow(0 0 5px rgba(55, 224, 138, 0.85)); }
+.ferry-route-soft { filter: blur(3px); }
+
+/* ---- ferry schedule rows ---- */
+.spot.ferry .fr { margin: 7px 0 0; }
+.spot.ferry .fr span { display: block; font: 600 11px/1.3 system-ui, sans-serif;
+  letter-spacing: .04em; text-transform: uppercase; color: #5c6b7d; }
+.spot.ferry .fr em { font-style: normal; font-size: 12.5px; line-height: 1.45; color: #16202c; }
+.spot.ferry .sub { margin: 8px 0 8px; }
+
+/* ---- route planner ---- */
+#plancard { position: absolute; top: 10px; right: calc(10px + env(safe-area-inset-right, 0px)); z-index: 900;
+  background: var(--card); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border: 1px solid rgba(14,42,67,.1); border-radius: 13px; box-shadow: var(--shadow);
+  padding: 9px 12px; max-width: 250px; font-size: 12px; color: var(--ink); }
+#plancard .pc-row { display: flex; align-items: center; gap: 6px; }
+/* narrow phones: leave the legend column clear instead of covering it */
+@media (max-width: 460px) {
+  #plancard { max-width: calc(100vw - 130px); }
+  #plancard .pc-row { flex-wrap: wrap; }
+}
+#plancard label { font: 600 10px/1 system-ui, sans-serif; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--ink-2); }
+#plan-speed { width: 52px; padding: 3px 5px; border: 1px solid rgba(14,42,67,.25);
+  border-radius: 7px; font: 600 13px/1.2 system-ui, sans-serif; color: var(--ink);
+  background: rgba(255,255,255,.85); text-align: right; }
+#plan-clear { margin-left: auto; border: none; background: rgba(14,42,67,.08);
+  color: var(--ink-2); font: 600 10px/1 system-ui, sans-serif; text-transform: uppercase;
+  letter-spacing: .05em; padding: 5px 8px; border-radius: 7px; cursor: pointer; }
+#plan-clear:active { background: rgba(14,42,67,.18); }
+#plan-stats { margin-top: 6px; font: 600 12.5px/1.35 system-ui, sans-serif; }
+#plancard .pc-hint { margin-top: 5px; font: 400 10px/1.45 system-ui, sans-serif; color: var(--ink-2); }
+
+.plan-line-g { filter: drop-shadow(0 0 5px rgba(55, 224, 138, 0.8)); }
+.plan-line-r { filter: drop-shadow(0 0 5px rgba(232, 80, 58, 0.8)); }
+
+.plan-pt { background: #fff; border: 3px solid #27ae60; border-radius: 50%;
+  box-shadow: 0 1px 6px rgba(10,25,45,.45); cursor: grab; }
+.plan-pt.start { border-color: var(--navy); background: #eaf3ff; }
+.plan-pt.end { border-color: #27ae60; background: #d9f7e6; }
+.plan-pt.mid { background: rgba(255,255,255,.55); border: 2px dashed rgba(39,174,96,.75);
+  box-shadow: none; }
+.plan-eta { background: var(--navy); color: #fff; padding: 3px 9px; border-radius: 10px;
+  font: 600 11px/1.5 system-ui, sans-serif; white-space: nowrap; width: auto !important;
+  height: auto !important; box-shadow: var(--shadow); pointer-events: none; }
+.plan-del { border: none; background: #fdecea; color: #c0392b; font: 600 12px/1 system-ui, sans-serif;
+  padding: 6px 10px; border-radius: 8px; cursor: pointer; }
+#planband { fill: rgba(46, 204, 113, .18); stroke: rgba(39, 174, 96, .5); stroke-width: 1; }
+
+/* ---- scale bar (Leaflet control, restyled) ---- */
+.leaflet-control-scale { margin-left: 10px !important; margin-bottom: 10px !important; }
+.leaflet-control-scale-line { background: rgba(255,255,255,.4) !important; border-color: rgba(14,42,67,.45) !important; }
+.leaflet-control-scale-line { background: var(--card); -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px); border: 1px solid rgba(14,42,67,.35); border-top: none;
+  color: var(--ink); font: 600 10px/1.7 system-ui, sans-serif; box-shadow: none;
+  padding: 1px 6px 0; }
+@media (min-width: 700px) and (max-width: 884px) { .leaflet-control-scale { margin-bottom: 182px !important; } }
+@media (max-width: 699px) { .leaflet-control-scale { margin-bottom: 204px !important; } }
+
+/* ---- plan-mode button column: chart/reset/about step aside ---- */
+.plan-ctl { display: none; }
+body.planning .plan-ctl { display: flex; height: 40px; font-size: 15px; }
+body.planning #btn-chart, body.planning #btn-home, body.planning #btn-about { display: none; }
+.ctl:disabled { opacity: .35; cursor: default; }
+
+/* ---- navigation buoys: tiny IALA shapes, names on tap ---- */
+.buoy-name { font: 600 12px/1.4 system-ui, sans-serif; color: #16202c; padding: 2px 4px; white-space: nowrap; }
+
+/* ---- source-health badge: a quiet amber note when a live feed is down ---- */
+#srcwarn { font: 600 9.5px/1.3 system-ui, sans-serif; color: #a15c00;
+  background: rgba(212, 172, 13, .14); border: 1px solid rgba(161, 92, 0, .25);
+  border-radius: 7px; padding: 3px 7px; white-space: nowrap; flex: 0 1 auto;
+  overflow: hidden; text-overflow: ellipsis; }
+
+/* not-for-navigation: always visible in red, loud while planning */
+#credits #nonav { color: #c0392b; font-weight: 700; }
+body.planning #credits #nonav { background: #c0392b; color: #fff; padding: 1px 6px; border-radius: 4px; }
+
+/* ---------------- boat polar editor ---------------- */
+#plan-boat { max-width: 150px; font-size: 12px; padding: 2px; }
+#plan-polar-btn { font-size: 11px; padding: 3px 8px; border-radius: 8px;
+  border: 1px solid rgba(14,42,67,.2); background: #fff; cursor: pointer; }
+#polarpad { position: fixed; inset: 0; z-index: 3000; background: rgba(14,42,67,.45);
+  display: flex; align-items: center; justify-content: center; }
+#polarpad[hidden] { display: none; }
+/* the hidden attribute must always win over explicit display rules */
+[hidden] { display: none !important; }
+/* scrollable when the card is taller than a landscape phone; #pp-svg keeps
+   its own touch-action:none so drags still work */
+.pp-card { background: #fff; border-radius: 14px; padding: 14px; width: min(92vw, 380px);
+  max-height: calc(100dvh - 24px); overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(14,42,67,.4); }
+.pp-card b { font-size: 13px; }
+#pp-svg { width: 100%; touch-action: none; display: block; margin-top: 6px; }
+.pp-btns { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
+.pp-btns button { font-size: 12px; padding: 5px 12px; border-radius: 8px;
+  border: 1px solid rgba(14,42,67,.2); background: #fff; cursor: pointer; }
+#pp-save { background: var(--navy); color: #fff; }
+
+body.planning #credits { display: block; }
+
+body.planning #btn-cams { display: none; }
+/* the plan-point wrapper carries the 40px tap target; visuals unchanged */
+.plan-pt-wrap { pointer-events: auto; background: transparent; }
+/* phones only: unscoped it also overrode the 700-884px tablet lift (182px) */
+@media (pointer: coarse) and (max-width: 699px) {
+  .leaflet-control-scale { margin-bottom: calc(204px + env(safe-area-inset-bottom)) !important; }
+}
+
+
+/* ---------------- buoys: cute minis that vane with the current ---------------- */
+.buoyw { pointer-events: auto; }
+.btilt { position: relative; width: 22px; height: 22px; display: flex;
+  align-items: flex-end; justify-content: center;
+  transform-origin: 50% 95%; transition: transform .8s ease; }
+.bglyph { display: block; filter: drop-shadow(0 1px 1.5px rgba(10,25,45,.45)); }
+.bwarn { display: none; position: absolute; top: -7px; left: 50%; transform: translateX(-50%);
+  font: 800 11px/1 system-ui, sans-serif; color: #c0392b; text-shadow: 0 0 3px #fff; }
+.buoy-wrong .bwarn { display: block; }
+.buoy-wrong .bglyph { filter: drop-shadow(0 0 5px rgba(232,80,58,.95)); }
+
+/* ---------------- live AIS vessels ---------------- */
+/* live boats: the ferry glyph, not another arrow — the frame already
+   carries two vector fields. The gently pulsing halo means a live
+   transponder. */
+.ais-ship { pointer-events: auto; text-align: center; }
+.ais-ship .glyph { display: block; font-size: 17px; line-height: 22px;
+  animation: shipglow 2.6s ease-in-out infinite; }
+.ais-ship.slow .glyph { font-size: 13.5px; }
+@keyframes shipglow {
+  0%, 100% { filter: drop-shadow(0 0 2px rgba(255,240,200,.65)) drop-shadow(0 1px 1px rgba(10,25,45,.45)); }
+  50%      { filter: drop-shadow(0 0 7px rgba(255,232,170,.95)) drop-shadow(0 1px 1px rgba(10,25,45,.45)); }
+}
+
+/* iOS auto-zooms focused controls under 16px; hold them at 16px there */
+@supports (-webkit-touch-callout: none) {
+  #plan-speed, #plan-boat, #pp-draft { font-size: 16px; }
+}
+/* keyboard focus must be visible */
+:focus-visible { outline: 2px solid #1c5f8f; outline-offset: 2px; }
+
+/* short DESKTOP windows only: on phones this would override the phone rule
+   (source order) and shove the stack off the top of a landscape screen */
+@media (max-height: 760px) and (min-width: 951px) and (pointer: fine) {
+  #sidectl { bottom: calc(216px + env(safe-area-inset-bottom)); }
+}
+
+.pp-draft-row { margin-right: auto; font: 600 12px/1 system-ui, sans-serif; color: var(--ink-2);
+  display: flex; align-items: center; gap: 4px; }
+#pp-draft { width: 52px; font-size: 13px; padding: 3px 4px; border: 1px solid rgba(14,42,67,.2); border-radius: 6px; }
+
+#timeline .axis { stroke: rgba(14,42,67,.55); stroke-width: 1.4; }
+#timeline .lgnum.inv { fill: #fff; }

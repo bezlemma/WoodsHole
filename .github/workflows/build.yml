@@ -1,0 +1,46 @@
+name: Build WoodsHole
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: woodshole-build-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check source syntax
+        run: |
+          node --check app.js
+          node --check sw.js
+          python -m py_compile dev_server.py tools/fetch_necofs.py tools/build.py
+      - name: Build static site
+        run: python tools/build.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: woodshole-site
+          path: dist/woodshole-site.zip
+      - name: Publish versioned build
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="build-${GITHUB_SHA}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "This commit already has a published build."
+          else
+            gh release create "$tag" dist/woodshole-site.zip \
+              --target "$GITHUB_SHA" --title "WoodsHole ${GITHUB_SHA:0:7}" \
+              --notes "Static website build. Imported automatically by bezlemma/website." --latest
+          fi

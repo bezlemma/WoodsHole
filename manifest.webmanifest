@@ -1,0 +1,15 @@
+{
+  "name": "Woods Hole — wind, tide & current",
+  "short_name": "Woods Hole",
+  "description": "Live and 72-hour wind, tide, current, and chop around Woods Hole, MA.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0e1c30",
+  "theme_color": "#14263f",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

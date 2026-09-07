@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About the Woods Hole Sailing Map</title>
+<meta name="theme-color" content="#0e2a43">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root { --navy: #14263f; --ink: #1a2634; --ink2: #5c6b7d; --sea: #eef4f9; --rule: #d7e1ea; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 16.5px/1.7 Georgia, 'Times New Roman', serif; color: var(--ink); background: #fbfdff; }
+  header { background: var(--navy); color: #fff; padding: 14px 20px; display: flex; align-items: baseline; gap: 10px;
+           font-family: -apple-system, system-ui, sans-serif; }
+  header b { font-family: Georgia, serif; font-size: 22px; }
+  header a { color: #fff; margin-left: auto; font-size: 13px; text-decoration: none;
+             border: 1px solid rgba(255,255,255,.35); padding: 4px 12px; border-radius: 999px; white-space: nowrap; }
+  main { max-width: 680px; margin: 0 auto; padding: 30px 20px 80px; }
+  h1 { font-size: 26px; line-height: 1.25; margin: 6px 0 22px; }
+  h2 { font-size: 20px; margin: 40px 0 10px; }
+  h2 small { color: var(--ink2); font-size: 13px; font-family: -apple-system, system-ui, sans-serif;
+             font-weight: 400; letter-spacing: .08em; text-transform: uppercase; margin-right: 8px; }
+  h3 { font-size: 16px; margin: 20px 0 4px; font-family: -apple-system, system-ui, sans-serif; letter-spacing: .02em; }
+  p { margin: 10px 0; }
+  .eq { display: flex; align-items: center; gap: 14px; margin: 16px 0; padding: 12px 18px;
+        background: var(--sea); border-radius: 8px; overflow-x: auto; }
+  .eq .m { flex: 1; text-align: center; font-size: 18px; white-space: nowrap; }
+  .eq .n { color: var(--ink2); font-size: 13px; font-family: -apple-system, system-ui, sans-serif; }
+  var { font-style: italic; }
+  .where { font-size: 15px; color: #2a3644; margin: 8px 0 14px; }
+  .where b { font-style: italic; font-weight: 600; }
+  table.tt { border-collapse: collapse; margin: 14px 0; font-size: 14px; width: 100%; }
+  table.tt th, table.tt td { border-bottom: 1px solid var(--rule); padding: 6px 8px; text-align: left; vertical-align: top; }
+  table.tt th { font-family: -apple-system, system-ui, sans-serif; font-size: 12px; letter-spacing: .06em;
+                text-transform: uppercase; color: var(--ink2); font-weight: 600; }
+  .warn { background: #fdf3ec; border-left: 3px solid #e07a3e; padding: 10px 14px; border-radius: 6px; font-size: 15px; }
+  a { color: #1c5f8f; }
+  ul { padding-left: 22px; }
+  li { margin: 5px 0; }
+  footer { color: var(--ink2); font-size: 13.5px; margin-top: 48px; font-family: -apple-system, system-ui, sans-serif; }
+</style>
+</head>
+<body>
+<header><b>Woods Hole Sailing Map</b><a href="index.html">← back to the map</a></header>
+<main>
+  <h1>The Physics of the Woods Hole Tides, Currents, and Winds</h1>
+
+  <p>Woods Hole exists at the interface of two tidal basins: Buzzard's Bay, and the Vineyard Sound. Buzzards Bay rises and falls with the ocean ties, but Vineyard Sound, fed the long way around the islands, runs at roughly a three hours delay. The Hole to Woods Hole is a narrow strait that feeds between the two. The water-level difference across it routinely exceeds a meter, and the strait often runs at five knots trying to relieve it. As the water rushes, there is often a real downward motion, like a vortex from a childrens book, inside the actual hole, reach leads to an inverse vortex, and bubbling up of water and a smooths surface to the east or west of the hole itself. A real treat to sail on as water rushes normal to the air/water interface rather than any direction along it. </p>
+  <!-- DO NOT REWRITE ABOVE THIS SECTION! -->
+
+  <div class="warn"><b>Not for navigation.</b> Built for curiosity and planning around the tide.
+  Cross-check anything that matters against official charts and predictions.</div>
+
+
+  <h3>Live data sources:</h3>
+  <table class="tt">
+    <tr><th>source</th><th>variable</th></tr>
+    <tr>
+      <td><a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> forecast API,
+      30 grid points (5 latitudes × 6 longitudes) covering the frame</td>
+      <td>wind_speed_10m [kn], wind_direction_10m [° from], wind_gusts_10m [kn], hourly, 24 h past to 120 h ahead</td>
+    </tr>
+    <tr>
+      <td>NWS observations API: stations KFMH (Otis), KMVY (Vineyard airport), KEWB (New Bedford), BUZM3 (Buzzards Bay tower, anemometer 24.8 m)</td>
+      <td>windSpeed [km/h], windDirection [°], windGust [km/h], timestamp</td>
+    </tr>
+    <tr>
+      <td>Weather Underground PWS KMAWOODS477, the Woods Hole Yacht Club Davis station on Great Harbor</td>
+      <td>windSpeed [mph], windGust [mph], winddir [°], temp [°F], station lat/lon</td>
+    </tr>
+    <tr>
+      <td><a href="https://tidesandcurrents.noaa.gov" target="_blank" rel="noopener">NOAA CO-OPS</a> station 8447930 (WHOI dock)</td>
+      <td>water_level observed [ft MLLW, 6 min], tide predictions [ft, high/low events and 6 min series], water_temperature [°F], air_temperature [°F]</td>
+    </tr>
+    <tr>
+      <td>NOAA CO-OPS current predictions: COD0911 (the Strait), COD0910, COD0912, COD0913 (Robinsons Hole), COD0915 (Canapitsit), ACT1821, ACT1831 (off Nobska)</td>
+      <td>signed speed along the station's flood/ebb axis [kn], 6 min series plus max/slack events, one week ahead</td>
+    </tr>
+    <tr>
+      <td>NOAA CO-OPS Boston 8443970 and New Bedford 8447636</td>
+      <td>tide predictions [ft]</td>
+    </tr>
+    <tr>
+      <td>UMass Dartmouth <a href="http://fvcom.smast.umassd.edu" target="_blank" rel="noopener">NECOFS</a>
+      (FVCOM circulation + SWAN wave model), subset over the frame</td>
+      <td>significant wave height <var>H<sub>s</sub></var> [cm], peak period <var>T<sub>p</sub></var> [0.1 s], mean wave direction [° from], hourly, ~3 days ahead</td>
+    </tr>
+    <tr>
+      <td>NDBC buoy 44020 (Nantucket Sound) via the IOOS ERDDAP mirror</td>
+      <td>sea_surface_wave_significant_height [m]. The buoy also reports wind (anemometer 4.1 m) which the map does not yet use.</td>
+    </tr>
+    <tr>
+      <td>NWS alerts API, marine zones ANZ233 (Vineyard Sound), ANZ234 (Buzzards Bay)</td>
+      <td>active marine warnings and statements</td>
+    </tr>
+  </table>
+
+  <h3>Static data sources:</h3>
+  <table class="tt">
+    <tr><th>source</th><th>variable</th></tr>
+    <tr>
+      <td>NOAA <a href="https://coast.noaa.gov/digitalcoast/data/" target="_blank" rel="noopener">CUDEM</a>
+      1/9 arc-second topobathymetric lidar (~3 m posts)</td>
+      <td>seafloor depth <var>h</var>(<var>x</var>) [m below MLLW], land elevation [m], water mask</td>
+    </tr>
+    <tr>
+      <td>NOAA <a href="https://encdirect.noaa.gov" target="_blank" rel="noopener">ENC</a> electronic chart vectors</td>
+      <td>shoreline, depth areas, soundings, rocks, wrecks, buoys, lights</td>
+      <td>the chart layer, drawn from the vectors by this project</td>
+    </tr>
+    <tr>
+      <td>Basemap-derived land cover</td>
+      <td>three classes: open/built, woods, water</td>
+    </tr>
+    <tr>
+      <td>NOAA harmonic prediction stations, 30 of them from Menemsha to Hyannis Port</td>
+      <td>range ratio <var>r</var>(<var>x</var>) and phase lag τ(<var>x</var>) of each station's tide relative to Woods Hole</td>
+    </tr>
+    <tr>
+      <td>U.S. C&amp;GS <i>Special Publication 208</i> (Haight 1938)</td>
+      <td>39 current stations occupied 1844–1935: flood/ebb directions [° true], speeds [kn], timing in hours on the Boston or New Bedford clock; and the Vineyard Sound Lightship velocity harmonic constants (M₂, M₄ components, 1913)</td>
+    </tr>
+    <tr>
+      <td>Output of this project's own offline solvers (source in <code>tools/</code>)</td>
+      <td>(a) three depth-integrated transport response patterns <var>q<sub>i</sub></var><sup>(m)</sup>(<var>x</var>) [m²/s] at two tide stages, eq. (3); (b) the shallow-water cycle of the Hole: <var>u</var>, <var>v</var> [m/s] at 24 phases × 3 boundary amplitudes, eq. (6); (c) the wind transfer atlas: speed factor <var>F</var>(<var>x</var>, θ) and deflection [rad] for 36 wind directions</td>
+    </tr>
+  </table>
+
+  <h2>Notation</h2>
+  <p>Einstein summation notation is used. Spatial indices <var>i</var>, <var>j</var> run over the
+  two horizontal directions, and a repeated index within a product is summed:
+  <var>x<sub>i</sub></var><var>y<sub>i</sub></var> denotes the dot product. Sums over other labels
+  (stations, flow modes, tidal constituents) keep an explicit Σ. ∂<sub><var>j</var></sub> ≡
+  ∂/∂<var>x<sub>j</sub></var>. Water density is ρ, gravitational acceleration <var>g</var>,
+still-water depth <var>h</var>(<var>x</var>), instantaneous depth
+  <var>H</var> = <var>h</var> + η.</p>
+
+  <h2>Tidal surface elevation η</h2>
+
+  <p>Prediction of the tide surface elevation η is found via a sum of cosines, one per constituent frequency (Doodson
+  1921; Schureman 1958). With constituent label <var>a</var>:</p>
+  <div class="eq"><span class="m">η(<var>t</var>) = Σ<sub><var>a</var></sub>
+    <var>f<sub>a</sub></var> <var>H<sub>a</sub></var>
+    cos( ω<sub><var>a</var></sub><var>t</var> + <var>V<sub>a</sub></var> + <var>u<sub>a</sub></var> − κ<sub><var>a</var></sub> )</span>
+    <span class="n">(1)</span></div>
+  <p class="where">Here <b>H<sub>a</sub></b> and <b>κ<sub>a</sub></b> are the fitted amplitude
+  and phase of constituent <var>a</var> (M₂ is the principal lunar semidiurnal, period 12.42 h;
+  S₂ solar; N₂, K₁, O₁ the next largest); <b>ω<sub>a</sub></b> its angular speed;
+  <b>V<sub>a</sub></b> the equilibrium argument; <b>f<sub>a</sub></b>, <b>u<sub>a</sub></b> nodal
+  corrections with the 18.6 year lunar period. The page takes NOAA's evaluation of (1) for
+  today's water levels. It evaluates (1) itself for the tidal currents: each current station
+  carries a baked constituent set fitted against a full year of official predictions (held-out
+  month errors 0.03 to 0.10 kn), so current predictions are computed astronomically in the
+  page, offline, indefinitely; the live NOAA table is shown beside the model in each station
+  popup as a cross-check. The 1913 lightship harmonics of §9 run through (1) the same way.</p>
+  
+  <p>To the prediction the page adds the observed-minus-predicted residual measured at the WHOI
+  dock. After a strong southwest wind or heavy rain the bay stands higher than the astronomical
+  value, and this measured surplus feeds the waterline, the drying flats, and <var>H</var>
+  everywhere it appears. One station does not fix the spatial pattern, so a baked atlas carries
+  each point's range ratio and lag relative to Woods Hole:</p>
+  <div class="eq"><span class="m">η(<var>x</var>, <var>t</var>) =
+    <var>r</var>(<var>x</var>) η<sub>WH</sub>( <var>t</var> − τ(<var>x</var>) )</span><span class="n">(2)</span></div>
+  <p class="where"><b>r</b>(<var>x</var>) and <b>τ</b>(<var>x</var>) are interpolated from the 30
+  NOAA prediction stations of §1, spread through the water by shortest in-water distance so that
+  values do not jump across peninsulas. Measured values run from <var>r</var> ≈ 1.9,
+  τ ≈ −0.3 h on the Buzzards side to <var>r</var> ≈ 0.8, τ ≈ +3 h at Vineyard Haven.</p>
+
+  <h2><small>§5</small>Depth-integrated tidal transport</h2>
+  <p>Over most of the frame the current is modeled as depth-integrated transport driven by the
+  surface slope against bottom friction. In steady channel flow the driving stress
+  ρ<var>gHS</var> balances the turbulent bottom drag ρ<var>C<sub>d</sub></var>|<var>u</var>|<var>u</var>,
+  where <var>S<sub>i</sub></var> = ∂<sub><var>i</var></sub>η is the slope and
+  <var>C<sub>d</sub></var> ≈ 2.5×10⁻³. This gives |<var>u</var>| = √(<var>gHS</var>/<var>C<sub>d</sub></var>)
+  (the Chézy relation, 1775), so the transport <var>q</var> = <var>uH</var> scales as
+  <var>H</var><sup>3/2</sup>. Requiring all transports to be consistent with one smooth surface
+  yields an elliptic problem with depth-dependent conductance:</p>
+  <div class="eq"><span class="m">∂<sub><var>i</var></sub> ( <var>K</var> ∂<sub><var>i</var></sub> φ ) =
+    ∂<sub><var>t</var></sub> η ,&nbsp;&nbsp;
+    <var>K</var> ∝ <var>H</var><sup> 3/2</sup></span><span class="n">(3)</span></div>
+  <p class="where"><b>φ</b> is the surface elevation driving the flow. The right side is the
+  storage flux: water filling a rising bay must arrive through its entrances. Coastlines are
+  no-flux boundaries. The open edges of the frame carry the measured boundary tide of eq. (2) as
+  a Dirichlet condition. The equation is mathematically identical to steady heat conduction
+  through a plate of varying thickness.</p>
+  <p>Equation (3) is solved offline by successive over-relaxation on two nested grids (115 m
+  cells over the full frame, 12.5 m cells over the Hole) and at two tide stages, because at low
+  water the drying flats leave the conducting network. The regional tide is narrowband, so the
+  boundary data is spanned by the two atlas patterns <var>r</var> cos(ωτ) and
+  <var>r</var> sin(ωτ), and the full solution by three baked responses: the in-phase pattern,
+  the quadrature pattern, and one additional streamfunction mode for the through-flow of the
+  Elizabeth Islands passages (Robinsons, Quicks, Canapitsit), which is a separate degree of
+  freedom. The live field is the superposition</p>
+  <div class="eq"><span class="m"><var>q<sub>i</sub></var>(<var>x</var>, <var>t</var>) =
+    Σ<sub><var>m</var></sub> α<sub><var>m</var></sub>(<var>t</var>) <var>q<sub>i</sub></var><sup>(<var>m</var>)</sup>(<var>x</var>) ,&nbsp;
+    <var>m</var> ∈ {A, B, C}</span><span class="n">(4)</span></div>
+  <p class="where">The amplitudes <b>α<sub>m</sub></b>(<var>t</var>) are determined each instant
+  by requiring (4) to match the live NOAA current predictions at three stations (the Strait, the
+  Sound off Nobska, Robinsons Hole): a 3×3 linear system
+  Σ<sub><var>m</var></sub> <var>M<sub>sm</sub></var> α<sub><var>m</var></sub> = <var>v<sub>s</sub></var>,
+  where <var>M<sub>sm</sub></var> is mode <var>m</var>'s baked response along station
+  <var>s</var>'s flood axis. Timing and strength come from measurements; the spatial shape comes
+  from the solved physics.</p>
+
+  <h2><small>§6</small>The nonlinear shallow-water solve of the Hole</h2>
+  <p>Equation (3) omits the advective inertia <var>u<sub>j</sub></var>∂<sub><var>j</var></sub><var>u<sub>i</sub></var>.
+  Scale analysis shows where that fails: inertia competes with bottom friction within
+  <var>L</var> ~ <var>H</var>/<var>C<sub>d</sub></var> ≈ 1 km of a constriction. Inside that
+  radius an inflow does not spread like a potential flow; it rides into the basin as a jet, while
+  the outflow drains like a sink. This asymmetry is exactly what one observes at the strait's
+  harbor entrance. The fine box around the Hole is therefore governed by the shallow-water
+  momentum equations, solved offline:</p>
+  <div class="eq"><span class="m">∂<sub><var>t</var></sub><var>u<sub>i</sub></var> +
+    <var>u<sub>j</sub></var>∂<sub><var>j</var></sub><var>u<sub>i</sub></var> =
+    −<var>g</var> ∂<sub><var>i</var></sub>η − <var>C<sub>d</sub></var> <var>u<sub>i</sub></var>|<var>u</var>|/<var>H</var>
+    + <var>A<sub>h</sub></var> ∂<sub><var>j</var></sub>∂<sub><var>j</var></sub><var>u<sub>i</sub></var></span>
+    <span class="n">(5)</span></div>
+  <div class="eq"><span class="m">∂<sub><var>t</var></sub>η + ∂<sub><var>i</var></sub>(<var>H u<sub>i</sub></var>) = 0</span>
+    <span class="n">(6)</span></div>
+  <p class="where">Solved on a staggered (Arakawa C) grid at 12.5 m resolution, time step 0.33 s,
+  upwind advection, lateral mixing <b>A<sub>h</sub></b> = 1 m²/s, semi-implicit quadratic drag,
+  wetting floor 5 cm. The open ring is forced by the same two boundary tide patterns as §5. One
+  M₂ cycle is run for spin-up and a second is recorded at 24 phases. No constant in (5) is
+  fitted; <var>C<sub>d</sub></var> and <var>A<sub>h</sub></var> are standard values.</p>
+  <p>Because the drag is quadratic the response is nonlinear in the forcing amplitude: in the
+  drag-dominated limit the speed grows as the square root of the boundary amplitude. A single
+  recorded cycle therefore cannot be rescaled linearly for spring and neap tides. The cycle is
+  instead solved at three boundary amplitudes, 0.35, 0.55, and 0.80 m, and stored as a response
+  surface. (The solved strait maxima, 1.25, 1.58, 1.89 m/s, follow the square root law; this is
+  a check of the solver, not an input.) At run time the page indexes this surface with two
+  measured quantities: the phase angle comes from the live calibration amplitudes of eq. (4),
+  and the amplitude coordinate is chosen so that the surface's strait speed matches the peak of
+  the measured strait prediction over the current half cycle. Flood/ebb duration asymmetry and
+  the daily inequality enter automatically, because the measured signal, not an idealized
+  sinusoid, drives the phase. Inside the fine box this cycle replaces the §5 velocities, with a
+  150 m crossfade at the box edge.</p>
+
+  <h2><small>§7</small>From transport to the speed at a hull</h2>
+  <p>A hull rides the water column mean velocity <var>u<sub>i</sub></var> =
+  <var>q<sub>i</sub></var>/<var>H</var>, with <var>H</var> evaluated at the present tide.
+  Friction also limits what any depth can sustain under a shared surface slope:</p>
+  <div class="eq"><span class="m">|<var>u</var>|<sub>max</sub> = <var>C<sub>f</sub></var> √<var>H</var>
+    ,&nbsp;&nbsp;<var>C<sub>f</sub></var> ≈ 3.3 kn m<sup>−1/2</sup></span><span class="n">(7)</span></div>
+  <p>which is |<var>u</var>| = √(<var>gHS</var>/<var>C<sub>d</sub></var>) evaluated at the
+  surface slopes the constrictions actually develop (about 10⁻³). A 15 m channel can run five
+  knots; a 1 m margin cannot, regardless of the transport a frictionless solution would route
+  through it.</p>
+  <p>A wind-driven surface drift is added: 2.5% of the local sheltered 10 m wind, veered 15° to
+  the right, the shallow-water limit of the Ekman balance. It contributes about a quarter knot
+  in ten knots of wind. Where the drift line runs into a nearby shore in both directions the
+  drift is suppressed, since enclosed water cannot sustain net transport.</p>
+
+  <h2><small>§8</small>Eddies</h2>
+  <p>Equations (3) and (4) are irrotational and cannot produce the recirculations behind
+  Penzance Point or Devil's Foot. These are carried by a two-dimensional vorticity equation
+  integrated live in the browser:</p>
+  <div class="eq"><span class="m">∂<sub><var>t</var></sub> ω + <var>u<sub>j</sub></var> ∂<sub><var>j</var></sub> ω =
+    ν<sub>e</sub> ∂<sub><var>j</var></sub>∂<sub><var>j</var></sub> ω − <var>r</var> ω + <var>S</var></span><span class="n">(8)</span></div>
+  <p class="where"><b>ω</b> = ε<sub><var>ij</var></sub>∂<sub><var>i</var></sub><var>u<sub>j</sub></var>
+  is the vertical vorticity; <b>ν<sub>e</sub></b> an eddy viscosity; <b>r</b> the bottom-friction
+  spin-down rate, increasing with the local speed; <b>S</b> the injection from
+  shoreline shear. The induced velocity is recovered from
+  ∂<sub><var>j</var></sub>∂<sub><var>j</var></sub>ψ<sub>r</sub> = −ω and added to the field.
+  The downwelling and upwelling described in the introduction are three-dimensional and outside
+  a depth-integrated model; what the map carries is their surface expression, the jet-edge
+  vorticity.</p>
+
+  <h2><small>§9</small>The 1844–1935 current surveys</h2>
+  <p>The Coast and Geodetic Survey occupied hundreds of current stations in these waters between
+  1844 and 1935. Haight's <i>Special Publication 208</i> (1938) reduced them to flood and ebb
+  directions, speeds, and timing referenced to Boston or New Bedford tides. Thirty-nine of those
+  stations, including 1931 transects across Quicks Hole and Robinsons Hole, are transcribed into
+  the page, re-keyed daily to the live reference predictions, scaled for springs and neaps, and
+  blended into the field with a Gaussian kernel of width σ = 1.5 km:</p>
+  <div class="eq"><span class="m"><var>u<sub>i</sub></var> ← (1−λ)<var>u<sub>i</sub></var> +
+    λ Σ<sub><var>s</var></sub><var>w<sub>s</sub></var><var>ū<sub>i</sub></var><sup>(<var>s</var>)</sup> / Σ<sub><var>s</var></sub><var>w<sub>s</sub></var> ,&nbsp;
+    <var>w<sub>s</sub></var> = e<sup>−|x−x<sub>s</sub>|²/2σ²</sup> ,&nbsp;
+    λ = min(1, Σ<sub><var>s</var></sub><var>w<sub>s</sub></var>)</span><span class="n">(9)</span></div>
+  <p class="where"><b>ū<sub>i</sub></b><sup>(s)</sup> is the survey's phase-keyed velocity at
+  station <var>s</var>. As a consistency check, the 1931 mid-Robinsons station (flood 146°,
+  2.9 kn; ebb 316°, 2.6 kn) agrees with NOAA's present harmonic station in the same water to a
+  few degrees and about 0.2 kn. At the Vineyard Sound Lightship the survey published velocity
+  harmonic constants (1913); these run through eq. (1) directly, rotated from the 1913 magnetic
+  axes (variation 13° W).</p>
+
+  <h2><small>§10</small>Wind</h2>
+  <p>The wind field is constructed in four stages: a model background, a regional analysis
+  from marine measurements, exact pinning at village sensors, and a local surface transfer. This is the standard structure of operational meteorology, and
+  the reason for it is stated in the overview: the wind over this frame is set by the synoptic
+  pressure field and by boundary layer processes over scales far larger than the frame, so a
+  local dynamical solve is not possible. Unlike the tide of §3, the interior wind is not
+  determined by values on the domain boundary.</p>
+  <h3>Stage 1: background</h3>
+  <p>The background <var>W<sub>i</sub></var><sup>b</sup>(<var>x</var>, <var>t</var>) is the
+  Open-Meteo hourly forecast of 10 m wind and gusts, sampled on the 30 point grid of §1 and
+  interpolated linearly in space and time. Open-Meteo is an aggregation API over operational
+  numerical weather prediction models. The map requests the default "best match" selection,
+  which over New England is NOAA's GFS (13 km grid) seamed with the HRRR (3 km grid) at short
+  lead times; ECMWF IFS and DWD ICON are alternative selections that can disagree with it by one
+  to two knots on a given afternoon. The background supplies what point measurements cannot: the spatial structure of the
+  regional wind and its entire time evolution, 24 h past to 120 h ahead, which the timeline and
+  route planner sample.</p>
+  <h3>Stage 2: regional analysis from marine stations</h3>
+  <p>The driving amplitude is constrained by anemometers whose exposure the model can state:
+  the Buzzards Bay tower (height-normalized from 24.8 m to 10 m by the log profile), buoy 44020
+  (normalized from 4.1 m), and the waterfront village sensors of stage 3, which join through
+  their own solved transfer. Wharf-sited town gauges (Newport, Nantucket) are excluded: they
+  carry town shelter the model cannot resolve, and a sheltered reading averaged into the region
+  drags the whole field low. For each fresh observation the page forms the ratio and rotation
+  against the model at the station, at the observation's own time, including that station's
+  surface transfer,</p>
+  <div class="eq"><span class="m"><var>ρ<sub>s</sub></var> = |<var>W</var><sup>obs</sup>| / |<var>T</var>[<var>W</var><sup>b</sup>](<var>x<sub>s</sub></var>)| ,&nbsp;&nbsp;
+    δθ<sub><var>s</var></sub> = θ<sup>obs</sup> − θ<sup>model</sup>(<var>x<sub>s</sub></var>)</span><span class="n">(10)</span></div>
+  <p>The innovations are then extended over the frame as the simplest
+  fields consistent with them: the amplitude correction ρ(<var>x</var>) and rotation
+  δθ(<var>x</var>) minimize the Dirichlet energy ∫|∇ρ|² dA, that is, they solve Laplace's
+  equation ∇²ρ = 0, with each station's innovation held at its cell and the pure forecast
+  (ρ = 1) held at the domain edges. There is no length constant and no weighting rule: the
+  geometry of the constraints alone decides how far each measurement reaches, and the maximum
+  principle guarantees the fill never exceeds the range of the measurements. The solve runs in
+  a few milliseconds at each observation refresh. Corrections fade quadratically to zero as
+  the displayed time moves 2.5 h from observation time, returning the field to the pure
+  forecast. Sheltered village sensors are deliberately excluded from this stage: comparing a
+  sheltered reading against the open background and averaging it into the region drags the
+  whole field low, which was the main defect of the previous version. Airport observations are
+  also excluded, since the background models already assimilate them.</p>
+  <h3>Stage 3: exact pinning at village sensors</h3>
+  <p>In-village sensors (the Yacht Club station, and the Tempest stations at Gansett Point and
+  Mill Pond when a data token is provided) enter as equalities: the displayed field equals the
+  measurement at the sensor. Each such station has a baked influence patch
+  <var>G<sub>s</sub></var>(<var>x</var>, θ), the solved response of the surface layer to a unit
+  velocity anomaly held at the station: the anomaly is carried downwind by the base flow and
+  relaxes back over the length <var>u</var>/λ with λ = 2(<var>C<sub>E</sub></var>|Δ<var>U</var>| +
+  <var>C<sub>g</sub></var>|<var>u</var>|)/<var>h</var>, a few hundred meters across water and
+  tens of meters into woods. At refresh the page solves the small linear system that makes the
+  composed field match every pinned sensor exactly; the physics of the patches decides how far
+  each sensor's influence reaches. WeatherFlow's API scopes a token to the stations its
+  account owns, so these two activate only if their owners share a token; a shared token is
+  stored once in the browser console with
+  <code>localStorage.setItem('whTempest', 'their-token')</code>.</p>
+  <h3>Stage 4: surface transfer</h3>
+  <p>What remains is locally solvable: how the regional 10 m wind maps onto each point of water,
+  given what lies upwind. Over any surface the neutral logarithmic profile holds:</p>
+  <div class="eq"><span class="m"><var>u</var>(<var>z</var>) =
+    (<var>u</var><sub>*</sub> / κ<sub>v</sub>) ln( (<var>z</var> − <var>d</var>) / <var>z</var><sub>0</sub> )</span>
+    <span class="n">(11)</span></div>
+  <p class="where"><b>u<sub>*</sub></b> is the friction velocity, <b>κ<sub>v</sub></b> ≈ 0.40 the
+  von Kármán constant, <b>z₀</b> the roughness length, <b>d</b> the displacement height.
+  Integrating (11) over the first 30 ft gives the layer mean each cover class can deliver,
+  normalized to open water:</p>
+  <table class="tt">
+    <tr><th>surface</th><th>z₀</th><th>d</th><th>0–30 ft layer mean</th></tr>
+    <tr><td>open water</td><td>0.2 mm (Charnock)</td><td>0</td><td>1.00</td></tr>
+    <tr><td>fields / built</td><td>0.4 m</td><td>2 m</td><td>0.39</td></tr>
+    <tr><td>woods</td><td>1.2 m</td><td>9 m</td><td>0.13</td></tr>
+  </table>
+  <p>Sheltering depends on the upwind direction, so the transfer is precomputed for 36 wind
+  directions at 62 m resolution by solving the steady surface-layer momentum balance over the
+  cover map: u<sub>j</sub>∂<sub>j</sub>u<sub>i</sub> = C<sub>E</sub>|ΔU|ΔU<sub>i</sub>/h −
+  C<sub>g</sub>(x)u<sub>i</sub>|u|/h + A∂²u<sub>i</sub>, with the drag C<sub>g</sub> per cover
+  class and the entrainment C<sub>E</sub> both derived from the log profile (11), no fitted
+  constants. Each cell stores the resulting speed factor and flow deflection; wakes, internal
+  boundary layers, and channeling come from the solved flow. The displayed wind is the 0–30 ft
+  layer mean; sea-surface processes (whitecaps, §11) use the standard 10 m speed, related over
+  water by a factor 1.11 from (11).</p>
+
+  <h2><small>§11</small>Surface waves</h2>
+  <p>Deep-water gravity waves obey the dispersion relation σ² = <var>gk</var> with group speed
+  <var>c<sub>g</sub></var> = ½√(<var>g</var>/<var>k</var>), where σ is the intrinsic frequency
+  and <var>k</var> the wavenumber. On a current <var>U<sub>i</sub></var> the observed frequency
+  is ω = σ + <var>k<sub>i</sub></var><var>U<sub>i</sub></var> and wave action <var>E</var>/σ is
+  conserved. Waves propagating against a strengthening current are shortened and steepened, and
+  where the opposing current reaches half the phase speed,
+  <var>k<sub>i</sub></var><var>U<sub>i</sub></var> = −σ/2, the group can no longer advance and
+  the energy breaks. This is the Woods Hole rip on an ebb against a southwest wind. The chop
+  field applies an opposition measure built from the same quantities (current against wind,
+  both strong), scaled by the forecast sea state, with an additional
+  standing-wave term where fast flow crosses shallow bars, gated by the Froude number
+  Fr = |<var>u</var>|/√(<var>gH</var>).</p>
+  <p>The background sea state is the NECOFS/SWAN forecast (<var>H<sub>s</sub></var>,
+  <var>T<sub>p</sub></var>, direction; §1). Its height is bias-corrected by the ratio of the
+  measured significant height at buoy 44020 to the model value there, with full weight at
+  observation time fading to the pure model 12 h out: the same background/analysis structure as
+  §10. Wavelength follows λ = <var>gT<sub>p</sub></var>²/2π from the forecast peak period.
+  Whitecap coverage keys to the local sheltered 10 m wind of §10.</p>
+  <p>Rendering note. A single wave train cannot carry a spatially varying propagation direction:
+  bending the wavevector by an angle field creates closed phase contours, which are topological
+  defects no real sea exhibits. The map therefore renders eight complete plane-wave systems on
+  fixed headings 45° apart, each obeying the dispersion relation, and blends their amplitudes at
+  each point according to the locally solved wind direction. All local physics (fetch limits,
+  depth-limited height, shoaling, finite crest length) enters through the amplitude fields. Near
+  beaches the phase switches to contours of the depth field so that crests arrive parallel to
+  shore, the zeroth order of refraction.</p>
+
+  <h2><small>§12</small>Route planner</h2>
+  <p>The planner marches each leg of the drawn route in steps of at most 700 m, sampling every
+  field at the position and time the boat would occupy. The boat is described by a polar
+  v(TWA, TWS), boat speed as a function of true wind angle and speed: measured ORC certificate
+  tables where published (J/24, Catalina 30), otherwise a parametric polar from hull speed
+  1.34√LWL, sail-area-to-displacement power, and keel type; a custom polar can be drawn by
+  hand. At each step the planner picks the heading that maximizes progress toward the mark,</p>
+  <div class="eq"><span class="m"><var>v</var><sub>prog</sub> =
+    max<sub>θ</sub> [ v(TWA(θ), TWS) cos(θ − θ<sub>rhumb</sub>) ] +
+    <var>u<sub>i</sub></var> <var>t̂<sub>i</sub></var></span><span class="n">(12)</span></div>
+  <p class="where">The maximization over headings θ makes beating upwind and gybing downwind
+  fall out of the polar with no separate rules; <var>u<sub>i</sub></var> is the full current of
+  §5 to §8, added as a vector. Legs whose best heading lies more than 25° off the rhumb line
+  are flagged red: they require tacking. The green band on the timeline marks departure to
+  predicted arrival and is recomputed whenever the route, the departure time, or the boat
+  changes.</p>
+
+  <h2><small>§13</small>Baked and live, summarized</h2>
+  <table class="tt">
+    <tr><th>computed offline, shipped static</th><th>fetched live by the page</th></tr>
+    <tr><td>bathymetry and land rasters (CUDEM, ENC)</td><td>tide predictions and observed level (8447930)</td></tr>
+    <tr><td>transport responses A/B/C at two stages, eq. (3)</td><td>current predictions (7 stations)</td></tr>
+    <tr><td>shallow-water cycle, 24 phases × 3 amplitudes, eq. (5)</td><td>wind background (Open-Meteo) and 5 wind stations</td></tr>
+    <tr><td>wind transfer atlas, 36 directions, eq. (11)</td><td>NECOFS wave forecast and buoy 44020 height</td></tr>
+    <tr><td>tide atlas r(x), τ(x), 30 stations, eq. (2)</td><td>marine alerts; Boston and New Bedford clocks</td></tr>
+    <tr><td>1844–1935 survey stations; lightship harmonics; ferry schedules</td><td>webcams</td></tr>
+  </table>
+  <p>Live responses are cached as they arrive. If the connection is lost the page continues on
+  the last data and reports its age.</p>
+
+  <h2><small>§14</small>Known limitations</h2>
+  <ul>
+    <li>The model is depth-integrated and barotropic: no vertical structure, no stratification,
+    and no true downwelling, only its surface vorticity signature.</li>
+    <li>The surface drift is a fixed 2.5% of wind at a fixed 15° veer, a stand-in for the full
+    Ekman spiral.</li>
+    <li>Exact pinning reaches only as far as each sensor's influence patch (about 1 km); the
+    Yacht Club value pinned is the Weather Underground mirror of the club's Davis station,
+    which reports a longer average than the club's own console display. The Newport and
+    Nantucket anemometer heights are not published and are assumed to be 10 m.</li>
+    <li>The wind transfer atlas assumes neutral stability. In stable stratification (warm air
+    over cold water, common here in spring and early summer) land wakes extend farther than the
+    baked decay lengths; in unstable conditions they are shorter.</li>
+    <li>The sea breeze is generated by land-sea temperature contrast inside the frame. A
+    multiplicative transfer on a regional background can reduce wind but cannot create it, so
+    days dominated by the local sea breeze are systematically under-predicted unless the
+    background model resolves it.</li>
+    <li>The land cover classes derive from basemap colors, not a land-cover survey.</li>
+    <li>The planner's polars ignore leeway, sea state, and crew skill; parametric polars for boats without published certificates are estimates from hull specifications.</li>
+    <li>Datum conversion uses a single regional NAVD88 to MLLW offset.</li>
+    <li>In the far corners of the frame the three response patterns extrapolate shapes
+    calibrated in the interior, and far-field speeds run high by up to a factor of two.</li>
+  </ul>
+
+  <h2><small>§15</small>References</h2>
+  <ul>
+    <li>F. J. Haight, <i>Currents in Narragansett Bay, Buzzards Bay, and Nantucket and Vineyard
+    Sounds</i>, U.S.C.&amp;G.S. Special Publication 208 (1938), Tables 5, 10–16.</li>
+    <li>P. Schureman, <i>Manual of Harmonic Analysis and Prediction of Tides</i>, U.S.C.&amp;G.S.
+    Special Publication 98 (1958).</li>
+    <li>A. E. Gill, <i>Atmosphere-Ocean Dynamics</i>, Academic Press (1982), for shallow-water
+    theory and the Ekman layer.</li>
+    <li>C. Chen et al., FVCOM, the unstructured-grid model behind NECOFS.</li>
+    <li>Linked articles:
+    <a href="https://en.wikipedia.org/wiki/Stream_function" target="_blank" rel="noopener">stream function</a>,
+    <a href="https://en.wikipedia.org/wiki/Ch%C3%A9zy_formula" target="_blank" rel="noopener">Chézy formula</a>,
+    <a href="https://en.wikipedia.org/wiki/Shallow_water_equations" target="_blank" rel="noopener">shallow water equations</a>,
+    <a href="https://en.wikipedia.org/wiki/Theory_of_tides" target="_blank" rel="noopener">theory of tides</a>,
+    <a href="https://en.wikipedia.org/wiki/Log_wind_profile" target="_blank" rel="noopener">log wind profile</a>,
+    <a href="https://en.wikipedia.org/wiki/Data_assimilation" target="_blank" rel="noopener">data assimilation</a>,
+    <a href="https://en.wikipedia.org/wiki/Wave_action_(continuum_mechanics)" target="_blank" rel="noopener">wave action</a>.</li>
+  </ul>
+
+  <footer>Everything runs client-side; the source is the page source.
+  <a href="https://bezialemma.com">bezialemma.com</a></footer>
+</main>
+</body>
+</html>

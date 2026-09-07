@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Woods Hole - Wind&Current</title>
+<meta name="description" content="Live wind, tide, and current conditions for Woods Hole, Massachusetts — with a 72-hour scrubbable forecast, nautical chart layer, and harbor webcams.">
+<meta name="theme-color" content="#0e2a43">
+<meta property="og:title" content="Woods Hole — wind · tide · current">
+<meta property="og:description" content="Live conditions and a 72-hour forecast for Woods Hole passage, Great Harbor, and Vineyard Sound.">
+<meta property="og:url" content="https://bezialemma.com/WoodsHole/">
+<link rel="preconnect" href="https://api.weather.gov" crossorigin>
+<link rel="preconnect" href="https://api.open-meteo.com" crossorigin>
+<link rel="preconnect" href="https://api.tidesandcurrents.noaa.gov" crossorigin>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230e2a43'/%3E%3Ctext x='50' y='72' font-size='60' text-anchor='middle'%3E%E2%9A%93%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="vendor/leaflet.css">
+<link rel="stylesheet" href="style.css?v=106">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+</head>
+<body>
+
+
+<div id="alertbar" hidden></div>
+
+<main>
+  <!-- ============ MAP HERO ============ -->
+  <section id="hero">
+    <div id="map" aria-label="Map of Woods Hole with wind, tide and current conditions"></div>
+
+    <div id="chips" role="status">
+      <div class="chip" id="chip-wind">
+        <svg class="chip-ico" id="wind-arrow" viewBox="0 0 24 24"><path d="M12 2.5 L17 13 L12 10.6 L7 13 Z" fill="currentColor"/></svg>
+        <div class="chip-body"><b id="wind-val">—</b><small id="wind-sub">wind</small></div>
+      </div>
+      <div class="chip" id="chip-cur" role="button" tabindex="0" title="Tap for passage windows">
+        <svg class="chip-ico" id="cur-arrow" viewBox="0 0 24 24"><path d="M12 2.5 L17 13 L12 10.6 L7 13 Z" fill="currentColor"/></svg>
+        <div class="chip-body"><b id="cur-val">—</b><small id="cur-sub">current</small></div>
+      </div>
+      <div class="chip" id="chip-tide">
+        <span class="chip-ico" id="tide-ico">〜</span>
+        <div class="chip-body"><b id="tide-val">—</b><small id="tide-sub">tide</small></div>
+      </div>
+      <div class="chip" id="chip-temp">
+        <span class="chip-ico">°</span>
+        <div class="chip-body"><b id="temp-val">—</b><small id="temp-sub">water · air</small></div>
+      </div>
+    </div>
+
+    <div id="sidectl">
+      <button id="btn-chart" class="ctl" aria-pressed="false" title="Toggle NOAA nautical chart">⚓<span>chart</span></button>
+      <button id="btn-plan" class="ctl" aria-pressed="false" title="Plan a route — tap the water to drop waypoints">✎<span>plan</span></button>
+      <button id="btn-plan-undo" class="ctl plan-ctl" title="Undo the last route change">↶<span>undo</span></button>
+      <button id="btn-plan-redo" class="ctl plan-ctl" title="Redo">↷<span>redo</span></button>
+      <button id="btn-plan-rev" class="ctl plan-ctl" title="Reverse the route — sail it home">⇄<span>reverse</span></button>
+      <button id="btn-plan-clear" class="ctl plan-ctl" title="Remove every waypoint">✕<span>clear</span></button>
+      <button id="btn-home" class="ctl" title="Re-center map">⌖<span>reset</span></button>
+      <a id="btn-about" class="ctl" href="about.html" title="How this forecast works">?<span>about</span></a>
+      <button id="btn-cams" class="ctl" aria-label="Scroll down to harbor webcams" title="Harbor webcams">⌑<span>cams</span></button>
+    </div>
+
+    <div id="plancard" hidden>
+      <div class="pc-row"><label for="plan-boat">boat</label>
+        <select id="plan-boat"></select>
+        <button id="plan-polar-btn" title="View or edit the polar">polar</button> <small id="plan-draft"></small></div>
+      <div class="pc-row" id="plan-speed-row" hidden><label for="plan-speed">speed</label>
+        <input id="plan-speed" type="number" inputmode="decimal" min="1" max="40" step="0.5" value="7"> <b>kn</b></div>
+      <div id="plan-stats">tap the water to drop waypoints</div>
+      <div class="pc-hint">tap water: add point · drag ring: move</div>
+    </div>
+
+    <div id="transitcard" hidden>
+      <b>Passage windows · the Strait</b>
+      <div id="transit-rows"></div>
+      <div class="pc-hint">times from NOAA current predictions with the live weather adjustment · flood runs to the Sound, ebb to Buzzards Bay</div>
+    </div>
+
+    <div id="zoomwrap" title="Drag to zoom">
+      <input id="zoomslider" type="range" min="0" max="1" step="0.002" value="0" aria-label="Map zoom">
+    </div>
+
+    <div id="legend" aria-label="Scales for current, wind, and waves — tap a scale to toggle its layer">
+      <div class="lg" id="lg-tog-cur" role="button" tabindex="0" title="Tap to toggle current arrows">
+        <span class="lg-top" id="lg-cur-max">2</span>
+        <svg id="lg-cur" width="26" height="96" viewBox="0 0 26 96" aria-hidden="true"></svg>
+        <span class="lg-bot">0</span>
+        <small>current<br>kn</small>
+      </div>
+      <div class="lg" id="lg-tog-wind" role="button" tabindex="0" title="Tap to toggle wind arrows">
+        <span class="lg-top" id="lg-wind-max">15</span>
+        <div class="lg-bar" id="lg-wind"></div>
+        <span class="lg-bot">0</span>
+        <small>wind<br>kn</small>
+      </div>
+      <div class="lg" id="lg-tog-waves" role="button" tabindex="0" title="Tap to toggle waves & whitecaps">
+        <span class="lg-top" id="lg-wave-max">—</span>
+        <div class="lg-bar lg-wavebar"></div>
+        <span class="lg-bot">0</span>
+        <small>seas</small>
+      </div>
+    </div>
+
+    <!-- ============ TIME SCRUBBER ============ -->
+    <div id="panel">
+      <div id="readout">
+        <button id="btn-now" class="live-btn is-live" title="Jump back to live conditions"><span class="dot"></span><span id="btn-now-label">LIVE</span></button>
+        <span id="srcwarn" hidden></span>
+        <div id="scrubtime">now</div>
+        <button id="btn-play" title="Play the 72-hour forecast" aria-label="Play forecast animation">▶</button>
+      </div>
+      <svg id="timeline" preserveAspectRatio="none" aria-label="72 hour forecast timeline — drag to scrub"></svg>
+      <input id="scrub-range" type="range" min="0" max="1000" value="0" step="1" aria-label="Forecast time scrubber">
+      <div id="credits"><b id="nonav">not for navigation</b></div>
+    </div>
+
+  </section>
+
+  <!-- ============ WEBCAMS ============ -->
+  <section id="cams">
+    <h2>Harbor cams</h2>
+    <div class="cam-grid">
+
+      <figure class="cam">
+        <div class="cam-frame">
+          <img class="yc-cam" alt="Great Harbor live view — Woods Hole Yacht Club"
+               data-src="https://images.weserv.nl/?url=75.147.19.50%3A81/live/0/jpeg.jpg&w=1100"
+               data-link="http://75.147.19.50:81/live/0/mjpeg.jpg">
+        </div>
+        <figcaption>Great Harbor · live photo <a href="https://woodsholeyachtclub.org/great-harbor-web-cam/" target="_blank" rel="noopener">from the Yacht Club</a></figcaption>
+      </figure>
+
+      <figure class="cam">
+        <div class="cam-frame">
+          <img class="yc-cam" alt="Great Harbor live view two — Woods Hole Yacht Club"
+               data-src="https://images.weserv.nl/?url=75.147.19.50/axis-cgi/jpg/image.cgi&w=1100"
+               data-link="http://75.147.19.50/axis-cgi/mjpg/video.cgi">
+        </div>
+        <figcaption>Great Harbor, second view · live photo <a href="https://woodsholeyachtclub.org/great-harbor-web-cam/" target="_blank" rel="noopener">from the Yacht Club</a></figcaption>
+      </figure>
+
+      <figure class="cam" data-embed="youtube" data-src="https://www.youtube-nocookie.com/embed/moLxu7LGuKk?autoplay=1&mute=1&playsinline=1">
+        <div class="cam-frame poster-eelpond">
+          <img loading="lazy" src="https://i.ytimg.com/vi/moLxu7LGuKk/mqdefault.jpg" alt="Eel Pond webcam preview" onerror="this.remove()">
+          <button class="cam-play" aria-label="Load Eel Pond live stream">▶</button>
+        </div>
+        <figcaption>Eel Pond · video <a href="https://www.mbl.edu/mbl-gift-shop/visit-mbl/eel-pond-live-stream" target="_blank" rel="noopener">from MBL</a></figcaption>
+      </figure>
+
+      <figure class="cam" data-embed="youtube" data-src="https://www.youtube-nocookie.com/embed/5-ClAzUV2UA?autoplay=1&mute=1&playsinline=1">
+        <div class="cam-frame">
+          <img loading="lazy" src="https://i.ytimg.com/vi/5-ClAzUV2UA/mqdefault.jpg" alt="Woods Hole harbor and ferry webcam preview" onerror="this.remove()">
+          <button class="cam-play" aria-label="Load Woods Hole harbor live stream">▶</button>
+        </div>
+        <figcaption>Great Harbor &amp; ferries · video <a href="https://www.youtube.com/@gomv/streams" target="_blank" rel="noopener">from the Woods Hole Inn</a></figcaption>
+      </figure>
+
+      <figure class="cam" data-embed="youtube" data-src="https://www.youtube-nocookie.com/embed/TE6N2eDrsR0?autoplay=1&mute=1&playsinline=1">
+        <div class="cam-frame">
+          <img loading="lazy" src="https://i.ytimg.com/vi/TE6N2eDrsR0/mqdefault.jpg" alt="Woods Hole ferry dock webcam preview" onerror="this.remove()">
+          <button class="cam-play" aria-label="Load ferry dock live stream">▶</button>
+        </div>
+        <figcaption>Ferry dock · video <a href="https://www.youtube.com/@gomv/streams" target="_blank" rel="noopener">from Pie in the Sky</a></figcaption>
+      </figure>
+
+    </div>
+    <p class="home-link"><a href="/">← bezialemma.com</a></p>
+  </section>
+<div id="polarpad" hidden>
+  <div class="pp-card">
+    <b id="pp-title">Polar · boat speed at 12 kn true wind</b>
+    <svg id="pp-svg" viewBox="0 8 216 356"></svg>
+    <div class="pp-btns">
+      <label class="pp-draft-row">draft <input id="pp-draft" type="number" inputmode="decimal" step="0.1" min="0.5" max="14"> ft</label>
+      <button id="pp-save">save as custom</button>
+      <button id="pp-cancel">close</button>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<button id="btn-map" aria-label="Scroll back up to the map">▲ map</button>
+
+<script src="vendor/leaflet.js"></script>
+<script src="app.js?v=195"></script>
+</body>
+</html>
